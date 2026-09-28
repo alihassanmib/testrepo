@@ -1,0 +1,7 @@
+FROM python:3.12-slim
+WORKDIR /app
+COPY app.py .
+ARG VERSION=dev
+ENV VERSION=$VERSION PYTHONUNBUFFERED=1
+EXPOSE 8080
+CMD ["python", "app.py"]

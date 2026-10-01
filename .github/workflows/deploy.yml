@@ -2,21 +2,34 @@ name: deploy
 
 on:
   push:
+    branches:
+      - develop
+      - "feature/**"
     tags:
       - "*"
 
 jobs:
   deploy:
     runs-on: self-hosted
-    env:
-      IMAGE: 10.10.83.5:8082/library/testrepo:${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set environment
+        run: |
+          case "$GITHUB_REF" in
+            refs/tags/*)          ENV=uat; VERSION=$GITHUB_REF_NAME ;;
+            refs/heads/develop)   ENV=dev; VERSION=dev-${GITHUB_SHA::7} ;;
+            refs/heads/feature/*) ENV=$(echo "${GITHUB_REF_NAME#feature/}" | tr 'A-Z' 'a-z' | sed 's/[^a-z0-9]/-/g' | cut -c1-40 | sed 's/-*$//')
+                                  VERSION=$ENV-${GITHUB_SHA::7} ;;
+          esac
+          echo "ENV=$ENV" >> "$GITHUB_ENV"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "IMAGE=10.10.83.5:8082/library/testrepo:$VERSION" >> "$GITHUB_ENV"
+
       - name: Build and push
         run: |
-          docker build --build-arg VERSION=${{ github.ref_name }} -t "$IMAGE" .
+          docker build --build-arg VERSION="$VERSION" -t "$IMAGE" .
           docker push "$IMAGE"
 
       - name: Deploy
-        run: docker compose -p testrepo up -d
+        run: docker compose -p "testrepo-$ENV" up -d

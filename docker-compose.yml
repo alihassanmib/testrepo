@@ -1,16 +1,16 @@
 services:
   app:
     image: ${IMAGE}
-    container_name: testrepo
+    container_name: testrepo-${ENV}
     restart: unless-stopped
     networks:
       - web
     labels:
       - traefik.enable=true
-      - traefik.http.routers.testrepo.rule=Host(`testrepo.dev.mib.com.mv`)
-      - traefik.http.routers.testrepo.entrypoints=websecure
-      - traefik.http.routers.testrepo.tls=true
-      - traefik.http.services.testrepo.loadbalancer.server.port=8080
+      - traefik.http.routers.testrepo-${ENV}.rule=Host(`testrepo-${ENV}.dev.mib.com.mv`)
+      - traefik.http.routers.testrepo-${ENV}.entrypoints=websecure
+      - traefik.http.routers.testrepo-${ENV}.tls=true
+      - traefik.http.services.testrepo-${ENV}.loadbalancer.server.port=8080
 networks:
   web:
     external: true

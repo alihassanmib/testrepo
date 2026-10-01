@@ -1,0 +1,15 @@
+name: cleanup
+
+on: delete
+
+jobs:
+  cleanup:
+    if: github.event.ref_type == 'branch' && startsWith(github.event.ref, 'feature/')
+    runs-on: self-hosted
+    steps:
+      - name: Remove preview
+        env:
+          REF: ${{ github.event.ref }}
+        run: |
+          ENV=$(echo "${REF#feature/}" | tr 'A-Z' 'a-z' | sed 's/[^a-z0-9]/-/g' | cut -c1-40 | sed 's/-*$//')
+          docker rm -f "testrepo-$ENV" || true
